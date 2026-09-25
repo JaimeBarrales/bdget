@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  test:
-    name: Run Tests with JaCoCo
+  test-and-build:
+    name: Test, Coverage & Build Jar
     runs-on: ubuntu-latest
 
     steps:
@@ -31,13 +31,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2
 
-      # Paso 4: Construir el proyecto y ejecutar tests
-      - name: Build and test
-        run: mvn clean verify
+      # Paso 4: Ejecutar pruebas y generar reporte JaCoCo
+      - name: Run tests with JaCoCo
+        run: ./mvnw clean verify
 
-      # Paso 5: Publicar reporte de cobertura de JaCoCo
+      # Paso 5: Construir el JAR
+      - name: Build Jar
+        run: ./mvnw clean package -DskipTests
+
+      # Paso 6: Upload reporte de cobertura JaCoCo
       - name: Upload JaCoCo Report
         uses: actions/upload-artifact@v3
         with:
           name: jacoco-report
           path: target/site/jacoco/
+
+      # Paso 7: Upload JAR artifact
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-jar
+          path: target/*.jar
